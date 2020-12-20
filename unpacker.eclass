@@ -1,4 +1,4 @@
-# Copyright 1999-2020 Gentoo Foundation
+# Copyright 1999-2020 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 # @ECLASS: unpacker.eclass
@@ -327,21 +327,6 @@ unpack_zip() {
 	[[ $? -le 1 ]] || die "unpacking ${zip} failed (arch=unpack_zip)"
 }
 
-# @FUNCTION: unpack_zst
-# @USAGE: <zstd file>
-# @DESCRIPTION:
-# Unpack zst archives.
-unpack_zst() {
-	[[ $# -eq 1 ]] || die "Usage: ${FUNCNAME} <file>"
-
-	local zst=$(find_unpackable_file "$1")
-	unpack_banner "${zst}"
-	zstd -df "${zst}" -o "${P}.tar"
-	tar -xpf "${P}.tar" -C "${WORKDIR}"
-
-	[[ $? -le 1 ]] || die "unpacking ${zst} failed (arch=unpack_zst)"
-}
-
 # @FUNCTION: _unpacker
 # @USAGE: <one archive to unpack>
 # @INTERNAL
@@ -372,7 +357,8 @@ _unpacker() {
 		: ${UNPACKER_LZIP:=$(type -P plzip || type -P pdlzip || type -P lzip)}
 		comp="${UNPACKER_LZIP} -dc" ;;
 	*.zst)
-		comp="zstd -df" ;;
+		zstd -df "${zst}" -o "${P}.tar"
+		tar -xpf "${P}.tar" -C "${WORKDIR}"
 	esac
 
 	# then figure out if there are any archiving aspects
@@ -400,8 +386,6 @@ _unpacker() {
 		;;
 	*.zip)
 		arch="unpack_zip" ;;
-	*.zst)
-		arch="unpack_zst" ;;
 	esac
 
 	# finally do the unpack
